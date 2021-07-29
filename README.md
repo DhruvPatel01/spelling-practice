@@ -1,3 +1,5 @@
+A Live App: https://dhruvpatel.dev/spelling-practice/
+
 A quick spell check practice app written in vanilla-js.
  
 It uses webspeech API. I hate myself for using it but it was simple. So simple.
