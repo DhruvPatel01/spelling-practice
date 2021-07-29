@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spelling Practice</title>
+    <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@latest/css/pico.min.css">
+    <style>
+        body {
+            padding: 5px;
+        }
+        div {
+            padding-top: 5px;
+            padding-bottom: 5px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .incorrect {
+            color: red;
+        }
+
+        .correct {
+            color: green;
+        }
+        
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="populate">
+            <a role="button" id="buttonToggle">Open List</a>
+            <a role="button" id="darkToggle">Light Theme</a>
+            <div class="hidden">
+                <textarea name="spell_list" id="list" cols="50" rows="10">thesaurus
+darkness
+                </textarea>  
+                <div id="buttonPopulate" style="text-align:center;">
+                    <a role="button">Populate</a>
+                </div>  
+            </div>
+        </div>
+    </div>
+
+    <h1>Practice Area</h1>
+    <div style='text-align: center;'>
+        <input type="text" id="answer"  autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+        <a role="button" id="buttonPlay">Play</a>
+        <a role="button" id="buttonView">View Answer</a>
+    </div>
+    <script src="main.js"></script>
+</body>
+</html>
