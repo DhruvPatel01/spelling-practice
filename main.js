@@ -114,3 +114,9 @@ document.getElementById("buttonView").addEventListener('click', view_correct);
 
 if (textarea.value != '')
     process_list();
+
+var wordnikBase = "https://www.wordnik.com/words/"
+document.getElementById('buttonWordnik').addEventListener('click', function () {
+    if (current != null && current != "")
+        window.open(wordnikBase + current, "", '__blank').focus();
+});
