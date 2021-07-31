@@ -21,11 +21,19 @@ darkToggle.addEventListener('click', function(e) {
     if (cur == "dark") {
         darkToggle.text = "Dark Theme";
         document.documentElement.dataset.theme = "light";
+        localStorage.setItem('theme', 'light');
     } else {
         darkToggle.text = "Light Theme";
         document.documentElement.dataset.theme = "dark";
+        localStorage.setItem('theme', 'dark');
     }
 });
+
+var prevTheme = localStorage.getItem('theme');
+if (prevTheme != null) {
+    darkToggle.text = prevTheme == 'dark'?'Light Theme': 'Dark Theme';
+    document.documentElement.dataset.theme = prevTheme;
+}
 
 var spells = [];
 var current = null;
@@ -119,4 +127,27 @@ var wordnikBase = "https://www.wordnik.com/words/"
 document.getElementById('buttonWordnik').addEventListener('click', function () {
     if (current != null && current != "")
         window.open(wordnikBase + current, "", '__blank').focus();
+});
+
+
+function readFile(file) {
+    const reader = new FileReader();
+    reader.addEventListener('load', (event) => {
+      textarea.value = event.target.result;
+      process_list();
+    });
+    reader.readAsText(file);
+}
+
+var fileButton = document.getElementById('filePicker');
+fileButton.addEventListener('change', function(e) {
+    for (const file of fileButton.files) {
+        var type = file.type ? file.type : 'NA';
+        if (type == "NA" || type == "text/plain") {
+            readFile(file);
+        } else {
+            window.alert("Only plain text files are supported!")
+        }
+        break;
+      }
 });
