@@ -1,6 +1,8 @@
 A Live App: https://dhruvpatel.dev/spelling-practice/
 
-A quick spell check practice app written in vanilla-js.
+A quick spell check practice app written in vanilla-js. 
+
+I felt that spelling practice has classic explore vs exploit dilemma, so have added [thompson sampling](https://web.stanford.edu/~bvr/pubs/TS_Tutorial.pdf). Let's how it works out!
  
 It uses webspeech API. I hate myself for using it but it was simple. So simple.
 
