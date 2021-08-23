@@ -6,6 +6,7 @@ var answer_box = document.getElementById('answer');
 var spells = [];
 var current = null;
 var utterance = null;
+var seq_idx = 0;
 
 // currentWasCorrect will be used for the purpose of Thompson Sampling(TS)
 // if user enters backspace or delete, this will become false.
@@ -25,12 +26,13 @@ function thompsonSampling() {
     var alpha = 1;
     var beta = 1;
 
-    
     for (var i = 0; i < spells.length; i++) {
         var elem = spells[i];
         alpha = elem[1];
         beta = elem[2];
+        console.log("IN");
         theta = rbeta(alpha, beta);
+        console.log("OUT");
         if (theta > best) {
             best = theta;
             idx = i;
@@ -40,16 +42,24 @@ function thompsonSampling() {
     return idx;
 }
 
+var summary_idx = document.getElementById('summary_index');
+function updateSummaryIndex() {
+    summary_idx.textContent = seq_idx;
+}
+
 function new_spell() {
-    if (current != null) {
-        if (currentWasCorrect)
-            current[2] += 1;
-        else
-            current[1] += 1;
-    }
+    // if (current != null) {
+    //     if (currentWasCorrect)
+    //         current[2] += 1;
+    //     else
+    //         current[1] += 1;
+    // }
     if (spells.length >= 1) {
         // var idx = Math.floor(Math.random() * spells.length);
-        var idx = thompsonSampling();
+        // var idx = thompsonSampling();
+        var idx = seq_idx;
+        seq_idx += 1;
+        updateSummaryIndex();
         current = spells[idx];
         utterance = new SpeechSynthesisUtterance(current[0]);
     }
@@ -68,6 +78,7 @@ function process_list() {
             spells.push([trimmed_elem, 1, 1]);
         }
     }
+    seq_idx = 0;
     new_spell();
 }
 
@@ -75,14 +86,18 @@ function load_list_from_local_db() {
     var list = window.localStorage.getItem("local_list");
     if (list != null) {
         list = JSON.parse(list);
+
+        spells = [];
         var val = '';
         for (const elem of list) {
+            spells.push(elem);
             val += elem[0] + '\n';
         }
         textarea.value = val;
         new_spell();
     }
 }
+
 load_list_from_local_db();
 
 function save_list_to_local_db() {
@@ -91,7 +106,8 @@ function save_list_to_local_db() {
         window.localStorage.setItem("local_list", val);
     }
 }
-window.setTimeout(save_list_to_local_db, 10000);
+
+// window.setTimeout(save_list_to_local_db, 10000);
 var saveButton = document.getElementById('saveButton');
 saveButton.addEventListener('click', save_list_to_local_db);
 
@@ -108,14 +124,14 @@ function check() {
     var val = answer_box.value
     if (val.trim().toLowerCase() == current[0].toLowerCase()) {
         answer_box.classList.add('correct');
-        window.setTimeout(new_spell, 1000);
-        window.setTimeout(do_play, 1500);
+        window.setTimeout(new_spell, 500);
+        window.setTimeout(do_play, 600);
     }
 }
 
 // https://stackoverflow.com/a/5926782
 var typingTimer;                //timer identifier
-var doneTypingInterval = 500;  //time in ms (5 seconds)
+var doneTypingInterval = 500;  //time in ms
 
 answer_box.addEventListener('keyup', function (e) {
     if (e.code == 'Backspace') {
@@ -138,18 +154,25 @@ function viewCorrect(e) {
         window.setTimeout(function () {
             answer_box.placeholder = '';
             answer_box.value = current_answer;
-        }, 1000);
+            answer_box.focus();
+        }, 800);
     }
 }
 document.getElementById("buttonView").addEventListener('click', viewCorrect);
 
-if (textarea.value != '')
+if (textarea.value != '' && spells == null)
     process_list();
 
 var wordnikBase = "https://www.wordnik.com/words/"
+var vocabularyBase = "https://www.vocabulary.com/dictionary/"
+
 document.getElementById('buttonWordnik').addEventListener('click', function () {
     if (current != null && current[0] != "")
         window.open(wordnikBase + current[0], "").focus();
+});
+document.getElementById('buttonVocabulary').addEventListener('click', function () {
+    if (current != null && current[0] != "")
+        window.open(vocabularyBase + current[0], "").focus();
 });
 
 function readFile(file) {

@@ -1,5 +1,4 @@
-function toggleVisible(e) {
-    var toHide = textarea.parentElement
+function toggleVisible(e, toHide) {
     if (toHide.classList.contains('hidden')) {
         toHide.classList.remove('hidden');
         buttonToggle.text = "Close List"
@@ -9,8 +8,13 @@ function toggleVisible(e) {
     }
 }
 
+var listBox = document.getElementById('list').parentElement
 var buttonToggle = document.getElementById('buttonToggle');
-buttonToggle.addEventListener('click', toggleVisible);
+buttonToggle.addEventListener('click', (e) => toggleVisible(e, listBox));
+
+var buttonConfig = document.getElementById('configButton');
+var configBox = document.getElementById('configBox');
+buttonConfig.addEventListener('click', (e) => toggleVisible(e, configBox));
 
 var darkToggle = document.getElementById("darkToggle");
 darkToggle.addEventListener('click', function(e) {

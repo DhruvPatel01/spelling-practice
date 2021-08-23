@@ -41,6 +41,7 @@
             <a role="button" id="buttonToggle">Open List</a>
             <a role="button" id="darkToggle">Light Theme</a>
             <a role="button" id="saveButton">Save Progress</a>
+            <a role="button" id="configButton">Config</a>
             <div class="hidden">
                 <textarea name="spell_list" id="list" cols="50" rows="10">thesaurus
 darkness
@@ -50,6 +51,24 @@ darkness
                     Or Upload a file: <input type="file" id="filePicker">
                 </div>  
             </div>
+
+            <div class="hidden" id="configBox">
+                <fieldset>
+                    <legend>Sequence Type</legend>
+                    <label for="seqLinear">
+                        <input type="radio" id="seqLinear" name="seq" value="linear" checked>
+                        Linear
+                    </label>
+                    <label for="seqRandom">
+                        <input type="radio" id="seqRandom" name="seq" value="random">
+                        Random
+                    </label>
+                    <label for="seqAlpha">
+                        <input type="radio" id="seqAlpha" name="seq" value="alphabetic">
+                        Alphabetic
+                    </label>
+                </fieldset>
+            </div>
         </div>
     </div>
 
@@ -58,7 +77,14 @@ darkness
         <input type="text" id="answer"  autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
         <a role="button" id="buttonPlay">Play</a>
         <a role="button" id="buttonView">View Answer</a>
+        <a role="button" id="buttonVocabulary">Open Vocabulary</a>
         <a role="button" id="buttonWordnik">Open Wordnik</a>
+    </div>
+
+    <div id="summary">
+        <div>
+            Current Index: <span id="summary_index"></span>
+        </div>
     </div>
     <script src="ui.js"></script>
     <script src="main.js"></script>
