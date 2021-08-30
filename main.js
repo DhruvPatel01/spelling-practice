@@ -163,6 +163,12 @@ document.getElementById("buttonView").addEventListener('click', viewCorrect);
 if (textarea.value != '' && spells == null)
     process_list();
 
+var skipButton = document.getElementById("skipButton");
+skipButton.addEventListener('click', (e) => {
+    new_spell();
+    do_play();
+});
+
 var wordnikBase = "https://www.wordnik.com/words/"
 var vocabularyBase = "https://www.vocabulary.com/dictionary/"
 
