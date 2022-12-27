@@ -16,6 +16,7 @@ function do_play(e) {
     if (utterance != null) {
         speechSynthesis.speak(utterance);
     }
+    answer_box.focus()
 }
 buttonPlay.addEventListener('click', do_play);
 
@@ -164,10 +165,12 @@ if (textarea.value != '' && spells == null)
     process_list();
 
 var skipButton = document.getElementById("skipButton");
-skipButton.addEventListener('click', (e) => {
+
+function do_skip(e) {
     new_spell();
     do_play();
-});
+}
+skipButton.addEventListener('click', do_skip);
 
 var wordnikBase = "https://www.wordnik.com/words/"
 var vocabularyBase = "https://www.vocabulary.com/dictionary/"
@@ -202,6 +205,13 @@ fileButton.addEventListener('change', function (e) {
         break;
     }
 });
+
+function keyboard_shortcuts(e) {
+    console.log("in document");
+
+}
+
+// document.addEventListener('keyup', keyboard_shortcuts);
 
 
 //
