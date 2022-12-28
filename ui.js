@@ -1,10 +1,8 @@
 function toggleVisible(e, toHide) {
     if (toHide.classList.contains('hidden')) {
         toHide.classList.remove('hidden');
-        buttonToggle.text = "Close List"
     } else {
         toHide.classList.add('hidden');
-        buttonToggle.text = "Open List"
     }
 }
 

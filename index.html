@@ -40,7 +40,7 @@
 <body>
     <div class="container">
         <div class="populate">
-            <a role="button" id="buttonToggle">Open List</a>
+            <a role="button" id="buttonToggle">Spelling List</a>
             <a role="button" id="darkToggle">Light Theme</a>
             <a role="button" id="saveButton">Save Progress</a>
             <a role="button" id="configButton">Config</a>
@@ -56,18 +56,9 @@ darkness
 
             <div class="hidden" id="configBox">
                 <fieldset>
-                    <legend>Sequence Type</legend>
-                    <label for="seqLinear">
-                        <input type="radio" id="seqLinear" name="seq" value="linear" checked>
-                        Linear
-                    </label>
-                    <label for="seqRandom">
-                        <input type="radio" id="seqRandom" name="seq" value="random">
-                        Random
-                    </label>
-                    <label for="seqAlpha">
-                        <input type="radio" id="seqAlpha" name="seq" value="alphabetic">
-                        Alphabetic
+                    <legend>Half Time (in minutes)</legend>
+                    <label for="halftime">
+                        <input type="number" id="halftime" name="halftime" value="64">
                     </label>
                 </fieldset>
             </div>
@@ -90,6 +81,7 @@ darkness
         </div>
     </div>
     <script src="ui.js"></script>
+    <script src="ebisu.min.es6.js"></script>
     <script src="main.js"></script>
 </body>
 </html>

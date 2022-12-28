@@ -2,11 +2,19 @@ var buttonToggle = document.getElementById('buttonToggle');
 var buttonPlay = document.getElementById("buttonPlay");
 var textarea = document.getElementById('list');
 var answer_box = document.getElementById('answer');
+var configHalfTime = document.getElementById("halftime");
 
 var spells = [];
 var current = null;
 var utterance = null;
 var seq_idx = 0;
+
+
+
+function get_time() {
+    return Date.now() / 1000 ; // in seconds
+}
+var baseline_time = get_time();
 
 // currentWasCorrect will be used for the purpose of Thompson Sampling(TS)
 // if user enters backspace or delete, this will become false.
@@ -20,26 +28,21 @@ function do_play(e) {
 }
 buttonPlay.addEventListener('click', do_play);
 
-function thompsonSampling() {
+function find_hardest() {
     var idx = null;
-    var best = 0;
-
-    var alpha = 1;
-    var beta = 1;
+    var best = 1000;
+    var elapsed = get_time() - baseline_time;
 
     for (var i = 0; i < spells.length; i++) {
         var elem = spells[i];
-        alpha = elem[1];
-        beta = elem[2];
-        console.log("IN");
-        theta = rbeta(alpha, beta);
-        console.log("OUT");
-        if (theta > best) {
-            best = theta;
+        var recall_prob = ebisu.predictRecall(elem[1], elapsed, exact=true);
+        // console.log(elem[0], recall_prob);
+        if (recall_prob <= best) {
+            best = recall_prob;
             idx = i;
-        }
+        } 
     }
-
+    // console.log(idx);
     return idx;
 }
 
@@ -48,17 +51,15 @@ function updateSummaryIndex() {
     summary_idx.textContent = seq_idx;
 }
 
-function new_spell() {
-    // if (current != null) {
-    //     if (currentWasCorrect)
-    //         current[2] += 1;
-    //     else
-    //         current[1] += 1;
-    // }
+function new_spell(update=true) {
+    if (update && current != null) {
+        var success = currentWasCorrect?1:0;
+        var elapsed = get_time() - baseline_time;
+        current[1] = ebisu.updateRecall(current[1], success, 1, elapsed);
+    }
+    
     if (spells.length >= 1) {
-        // var idx = Math.floor(Math.random() * spells.length);
-        // var idx = thompsonSampling();
-        var idx = seq_idx;
+        var idx = find_hardest();
         seq_idx += 1;
         updateSummaryIndex();
         current = spells[idx];
@@ -73,19 +74,25 @@ function new_spell() {
 
 function process_list() {
     spells = [];
+    var half_time = parseFloat(configHalfTime.value);
+    half_time = isNaN(half_time)?60:half_time;
+    half_time = half_time*60;
+
     for (const elem of textarea.value.split('\n')) {
         var trimmed_elem = elem.trim();
         if (trimmed_elem != null && trimmed_elem != "") {
-            spells.push([trimmed_elem, 1, 1]);
+            spells.push([trimmed_elem, ebisu.defaultModel(half_time)]);
         }
     }
     seq_idx = 0;
-    new_spell();
+    baseline_time = get_time();
+    new_spell(false);
 }
 
 function load_list_from_local_db() {
-    var list = window.localStorage.getItem("local_list");
+    var list = window.localStorage.getItem("local_list:spells");
     if (list != null) {
+        baseline_time = window.localStorage.getItem("local_list:baseline_time");
         list = JSON.parse(list);
 
         spells = [];
@@ -95,7 +102,7 @@ function load_list_from_local_db() {
             val += elem[0] + '\n';
         }
         textarea.value = val;
-        new_spell();
+        new_spell(false);
     }
 }
 
@@ -104,7 +111,8 @@ load_list_from_local_db();
 function save_list_to_local_db() {
     if (spells.length > 0) {
         var val = JSON.stringify(spells);
-        window.localStorage.setItem("local_list", val);
+        window.localStorage.setItem("local_list:spells", val);
+        window.localStorage.setItem("local_list:baseline_time", baseline_time);
     }
 }
 
@@ -167,7 +175,7 @@ if (textarea.value != '' && spells == null)
 var skipButton = document.getElementById("skipButton");
 
 function do_skip(e) {
-    new_spell();
+    new_spell(true);
     do_play();
 }
 skipButton.addEventListener('click', do_skip);
@@ -212,84 +220,3 @@ function keyboard_shortcuts(e) {
 }
 
 // document.addEventListener('keyup', keyboard_shortcuts);
-
-
-//
-//  Beta distribution related code
-//  Copied from: https://stackoverflow.com/a/13569020
-//
-
-function sum(nums) {
-    var accumulator = 0;
-    for (var i = 0, l = nums.length; i < l; i++)
-        accumulator += nums[i];
-    return accumulator;
-}
-
-
-// like betavariate, but more like R's name
-function rbeta(alpha, beta) {
-    var alpha_gamma = rgamma(alpha, 1);
-    return alpha_gamma / (alpha_gamma + rgamma(beta, 1));
-}
-
-// From Python source, so I guess it's PSF Licensed
-var SG_MAGICCONST = 1 + Math.log(4.5);
-var LOG4 = Math.log(4.0);
-
-function rgamma(alpha, beta) {
-    // does not check that alpha > 0 && beta > 0
-    if (alpha > 1) {
-        // Uses R.C.H. Cheng, "The generation of Gamma variables with non-integral
-        // shape parameters", Applied Statistics, (1977), 26, No. 1, p71-74
-        var ainv = Math.sqrt(2.0 * alpha - 1.0);
-        var bbb = alpha - LOG4;
-        var ccc = alpha + ainv;
-
-        while (true) {
-            var u1 = Math.random();
-            if (!((1e-7 < u1) && (u1 < 0.9999999))) {
-                continue;
-            }
-            var u2 = 1.0 - Math.random();
-            v = Math.log(u1 / (1.0 - u1)) / ainv;
-            x = alpha * Math.exp(v);
-            var z = u1 * u1 * u2;
-            var r = bbb + ccc * v - x;
-            if (r + SG_MAGICCONST - 4.5 * z >= 0.0 || r >= Math.log(z)) {
-                return x * beta;
-            }
-        }
-    }
-    else if (alpha == 1.0) {
-        var u = Math.random();
-        while (u <= 1e-7) {
-            u = Math.random();
-        }
-        return -Math.log(u) * beta;
-    }
-    else { // 0 < alpha < 1
-        // Uses ALGORITHM GS of Statistical Computing - Kennedy & Gentle
-        while (true) {
-            var u3 = Math.random();
-            var b = (Math.E + alpha) / Math.E;
-            var p = b * u3;
-            if (p <= 1.0) {
-                x = Math.pow(p, (1.0 / alpha));
-            }
-            else {
-                x = -Math.log((b - p) / alpha);
-            }
-            var u4 = Math.random();
-            if (p > 1.0) {
-                if (u4 <= Math.pow(x, (alpha - 1.0))) {
-                    break;
-                }
-            }
-            else if (u4 <= Math.exp(-x)) {
-                break;
-            }
-        }
-        return x * beta;
-    }
-}
