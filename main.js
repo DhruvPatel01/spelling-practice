@@ -11,10 +11,9 @@ var seq_idx = 0;
 
 
 
-function get_time() {
+function timeNow() {
     return Date.now() / 1000 ; // in seconds
 }
-var baseline_time = get_time();
 
 // currentWasCorrect will be used for the purpose of Thompson Sampling(TS)
 // if user enters backspace or delete, this will become false.
@@ -31,18 +30,16 @@ buttonPlay.addEventListener('click', do_play);
 function find_hardest() {
     var idx = null;
     var best = 1000;
-    var elapsed = get_time() - baseline_time;
 
     for (var i = 0; i < spells.length; i++) {
         var elem = spells[i];
-        var recall_prob = ebisu.predictRecall(elem[1], elapsed, exact=true);
-        // console.log(elem[0], recall_prob);
+        var elapsed = timeNow() - elem.lastReviewed;
+        var recall_prob = ebisu.predictRecall(elem.model, elapsed, exact=true);
         if (recall_prob <= best) {
             best = recall_prob;
             idx = i;
         } 
     }
-    // console.log(idx);
     return idx;
 }
 
@@ -54,8 +51,9 @@ function updateSummaryIndex() {
 function new_spell(update=true) {
     if (update && current != null) {
         var success = currentWasCorrect?1:0;
-        var elapsed = get_time() - baseline_time;
-        current[1] = ebisu.updateRecall(current[1], success, 1, elapsed);
+        var elapsed = timeNow() - current.lastReviewed;
+        current.lastReviewed = timeNow();
+        current.model = ebisu.updateRecall(current.model, success, 1, elapsed);
     }
     
     if (spells.length >= 1) {
@@ -63,43 +61,47 @@ function new_spell(update=true) {
         seq_idx += 1;
         updateSummaryIndex();
         current = spells[idx];
-        utterance = new SpeechSynthesisUtterance(current[0]);
+        utterance = new SpeechSynthesisUtterance(current.spell);
+        do_play();
     }
     if (answer_box.classList.contains('correct')) {
         answer_box.classList.remove('correct');
     }
     answer_box.value = '';
     currentWasCorrect = true;
+    
 }
 
 function process_list() {
     spells = [];
     var half_time = parseFloat(configHalfTime.value);
-    half_time = isNaN(half_time)?60:half_time;
+    half_time = isNaN(half_time)?1:half_time;
     half_time = half_time*60;
 
     for (const elem of textarea.value.split('\n')) {
         var trimmed_elem = elem.trim();
         if (trimmed_elem != null && trimmed_elem != "") {
-            spells.push([trimmed_elem, ebisu.defaultModel(half_time)]);
+            spells.push({
+                spell: trimmed_elem,
+                model: ebisu.defaultModel(half_time),
+                lastReviewed: timeNow(),
+            });
         }
     }
     seq_idx = 0;
-    baseline_time = get_time();
     new_spell(false);
 }
 
 function load_list_from_local_db() {
-    var list = window.localStorage.getItem("local_list:spells");
+    var list = window.localStorage.getItem("local_list");
     if (list != null) {
-        baseline_time = window.localStorage.getItem("local_list:baseline_time");
         list = JSON.parse(list);
 
         spells = [];
         var val = '';
         for (const elem of list) {
             spells.push(elem);
-            val += elem[0] + '\n';
+            val += elem.spell + '\n';
         }
         textarea.value = val;
         new_spell(false);
@@ -111,12 +113,16 @@ load_list_from_local_db();
 function save_list_to_local_db() {
     if (spells.length > 0) {
         var val = JSON.stringify(spells);
-        window.localStorage.setItem("local_list:spells", val);
-        window.localStorage.setItem("local_list:baseline_time", baseline_time);
+        window.localStorage.setItem("local_list", val);
     }
 }
 
-// window.setTimeout(save_list_to_local_db, 10000);
+function auto_save(timeout) {
+    save_list_to_local_db();
+    window.setTimeout(auto_save, timeout, timeout);
+}
+auto_save(10000);
+
 var saveButton = document.getElementById('saveButton');
 saveButton.addEventListener('click', save_list_to_local_db);
 
@@ -131,10 +137,10 @@ buttonPopulate.addEventListener('click', function (e) {
 
 function check() {
     var val = answer_box.value
-    if (val.trim().toLowerCase() == current[0].toLowerCase()) {
+    if (val.trim().toLowerCase() == current.spell.toLowerCase()) {
         answer_box.classList.add('correct');
         window.setTimeout(new_spell, 500);
-        window.setTimeout(do_play, 600);
+        // window.setTimeout(do_play, 510);
     }
 }
 
@@ -159,7 +165,7 @@ function viewCorrect(e) {
         
         var current_answer = answer_box.value;
         answer_box.value = ''
-        answer_box.placeholder = current[0];
+        answer_box.placeholder = current.spell;
         window.setTimeout(function () {
             answer_box.placeholder = '';
             answer_box.value = current_answer;
@@ -184,12 +190,12 @@ var wordnikBase = "https://www.wordnik.com/words/"
 var vocabularyBase = "https://www.vocabulary.com/dictionary/"
 
 document.getElementById('buttonWordnik').addEventListener('click', function () {
-    if (current != null && current[0] != "")
-        window.open(wordnikBase + current[0], "").focus();
+    if (current != null && current.spell != "")
+        window.open(wordnikBase + current.spell, "").focus();
 });
 document.getElementById('buttonVocabulary').addEventListener('click', function () {
-    if (current != null && current[0] != "")
-        window.open(vocabularyBase + current[0], "").focus();
+    if (current != null && current.spell != "")
+        window.open(vocabularyBase + current.spell, "").focus();
 });
 
 function readFile(file) {
