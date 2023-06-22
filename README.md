@@ -19,3 +19,8 @@ Simple. Copy and paste the spellings you want to practice in the box. One word p
 In case you need are stuck, click on `View Correct` button, it will put correct spell in the box for one second and then replace with earlier text.
 
 I use local storage API to save the populated list, so when you come back again, the list will stay there.
+
+### Keyboard shortcuts
+
+`Ctrl + ;` to skip the current spell. 
+`Ctrl + SPACE` to view the correct answer. 
